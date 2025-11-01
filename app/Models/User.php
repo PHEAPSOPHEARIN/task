@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use Laravel\Sanctum\HasApiTokens;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,7 +10,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -57,7 +57,8 @@ class User extends Authenticatable implements JWTSubject
         ];
     }
     public function role()
-    {
-        return $this->belongsTo(Role::class);
-    }
+{
+    // Assumes the 'users' table has a 'role_id' column
+    return $this->belongsTo(Role::class);
+}
 }

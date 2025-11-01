@@ -8,14 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class Role extends Model
 {
     use HasFactory;
+    
     protected $fillable = [
-      'name',
-      'description',
-      'status',
-      'type'
+        'name',
+        'description',
+        'status',
+        'type'
     ];
 
-    protected static function boot()
+    /**
+     * Prevent deletion or update of 'default' type roles.
+     * This protects essential system roles (e.g., the base 'customer' or 'admin' role).
+     */
+   protected static function boot()
     {
         parent::boot();
         static::updating(function ($role) {
@@ -29,9 +34,14 @@ class Role extends Model
             }
         });
     }
-    public function user(){
-        return $this->belongsTo(User::class);
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
     }
 
-
+    public function abilities()
+    {
+        return $this->belongsToMany(Ability::class, 'role_abilities');
+    }
 }
