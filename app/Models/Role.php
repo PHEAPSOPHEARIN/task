@@ -13,6 +13,7 @@ class Role extends Model
         'name',
         'description',
         'status',
+        'role_id',
         'type'
     ];
 

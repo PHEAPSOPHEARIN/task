@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Ability;
+use App\Models\Role;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,9 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('abilities', function (Blueprint $table) {
+        Schema::create('role_abilities', function (Blueprint $table) {
             $table->id();
-            $table->string('action')->unique();
+            $table->foreignIdFor(Role::class)->constrained();
+            $table->foreignIdFor(Ability::class)->constrained();
             $table->timestamps();
         });
     }
@@ -23,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('abilities');
+        Schema::dropIfExists('role_abilities');
     }
 };

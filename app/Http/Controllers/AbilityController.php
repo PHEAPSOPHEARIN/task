@@ -67,11 +67,11 @@ class AbilityController extends Controller
     public function storeAbilitiesByRole(StoreRoleAbilityRequest $request, Role $role)
     {
 
-        UserLog::create([
-            'user_id'=>request()->user()->id,
-            'action'=>'create role ability',
-            'data'=>json_encode($request),
-        ]);
+        // UserLog::create([
+        //     'user_id'=>request()->user()->id,
+        //     'action'=>'create role ability',
+        //     'data'=>json_encode($request),
+        // ]);
         $role->abilities()->sync($request->input('abilityIds'));
         $users = User::where('role_id', $role->id)->get();
         foreach ($users as $user) {
