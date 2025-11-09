@@ -72,65 +72,73 @@ class AuthController extends Controller
 
 public function login(Request $request)
 {
-    // 1. Validate request
     $request->validate([
         'email' => 'required|string|email',
-        'password' => 'required|string|min:6',
+        'password' => 'required|string',
     ]);
 
-    // 2. Attempt login using Auth
+    // Check if user exists
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'User not found'
+        ], 404);
+    }
+
+    // Check if password is correct
+    if (!Hash::check($request->password, $user->password)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Password is incorrect'
+        ], 400);
+    }
+
+    // COMMENT THIS OUT FOR NOW
+    // if (is_null($user->email_verified_at)) {
+    //     return response()->json([
+    //         'success' => false,
+    //         'message' => 'Email not verified'
+    //     ], 401);
+    // }
+
+    // Attempt login
     if (!Auth::attempt($request->only('email', 'password'), true)) {
         return response()->json([
             'success' => false,
-            'message' => 'Invalid email or password'
-        ], 401);
+            'message' => 'Authentication failed'
+        ], 400);
     }
 
-    $user = Auth::user(); // Auth::user() is now guaranteed to exist
-
-    // 3. Optional: check email verification
-    if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Email not verified'
-        ], 403);
-    }
-
-    // 4. Delete old tokens
+    // Delete old tokens
     $user->tokens()->delete();
 
-    // 5. Prepare abilities
-    $abilities = $user->role->abilities->pluck('action')->toArray();
-
-    // Restrict abilities for certain roles
-    if (in_array($user->role->name, [
-        AppConstant::DEFAULT_USER_ROLE['FRONTEND_DEV'],
-        AppConstant::DEFAULT_USER_ROLE['CUSTOMER'],
-    ])) {
-        $abilities = ['basic'];
+    // Get abilities
+    $ablities = $user->role->abilities->pluck('action')->toArray();
+    if ($user->role->name == AppConstant::DEFAULT_USER_ROLE['FRONTEND_DEV'] ||
+        $user->role->name == AppConstant::DEFAULT_USER_ROLE['CUSTOMER']) {
+        $ablities = ['basic'];
     }
 
-    // 6. Create new token
-    $token = $user->createToken($user->email, $abilities)->plainTextToken;
+    // Create token
+    $token = $user->createToken($user->email, $ablities)->plainTextToken;
 
-    // 7. Prepare response
     $responseData = [
         'accessToken' => $token,
         'user' => new UserResource($user),
     ];
 
-    // Add abilities for admin or other roles
     if (!in_array($user->role->name, [
         AppConstant::DEFAULT_USER_ROLE['CUSTOMER'],
         AppConstant::DEFAULT_USER_ROLE['FRONTEND_DEV'],
     ])) {
-        $responseData['abilities'] = $abilities;
+        $responseData['abilities'] = $ablities;
     }
 
-    // 8. Return response
     return response()->json([
         'success' => true,
-        'data' => $responseData,
+        'data' => $responseData
     ]);
 }
 
